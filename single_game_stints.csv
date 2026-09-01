@@ -1,0 +1,13 @@
+game_id,stint,start_minute,end_minute,minutes,possessions,M,E,Y,Dream_Lineup,Mean_Lineup
+0,0,0,23,23,44,-18.788721723661986,-0.6659483212213518,-19.454670044883336,"Tobias, Susan, Jarod, Caleb, Syndrome","Cindy, Cosmo, Wanda, Ashley, Shannon"
+0,1,23,31,8,19,-18.78116093611449,-2.436971449413965,-21.218132385528452,"Shaggy, Susan, Jarod, Caleb, Syndrome","Cindy, Jimmy's mom, Wanda, Ashley, Shannon"
+0,2,31,32,1,1,-10.650391763103555,-11.598183516872435,-22.248575279975988,"Shaggy, Susan, Jarod, Caleb, Syndrome","Jimmy's mom, Wanda, Chip, Link, Ashley"
+0,3,32,34,2,4,-32.15889390899753,-1.1547687780152447,-33.31366268701277,"Buddy, Shaggy, Syndrome, Journey, Westbrook","Jimmy's mom, Wanda, Chip, Link, Ashley"
+0,4,34,36,2,9,-10.235209271256506,0.7240393304971956,-9.511169940759311,"Buddy, Shaggy, Syndrome, Journey, Westbrook","Sheen, Jimmy's mom, Timmy, Chip, Link"
+0,5,36,40,4,12,-21.201868230139212,-0.41646198764081566,-21.618330217780027,"Buddy, Shaggy, Journey, Westbrook, Darryl","Sheen, Jimmy's mom, Timmy, Chip, Link"
+0,6,40,41,1,1,-23.893002768612995,-9.412369975879711,-33.30537274449271,"Buddy, Wemby, Journey, Westbrook, Darryl","Sheen, Jimmy's mom, Timmy, Chip, Link"
+0,7,41,42,1,5,-18.93117263981469,-1.7632013302413894,-20.69437397005608,"Buddy, Wemby, Journey, Westbrook, Darryl","Sheen, Mr. Crocker, Timmy, Chip, Link"
+0,8,42,44,2,6,-15.657656122120226,-2.575384312190165,-18.23304043431039,"Buddy, Wemby, Journey, Westbrook, Darryl","Mr. Crocker, Timmy, Chip, Link, Denzel"
+0,9,44,45,1,5,-21.80131847121194,-3.7031157820715177,-25.504434253283456,"Jimbo, Wemby, Westbrook, Anna, Darryl","Mr. Crocker, Timmy, Chip, Link, Denzel"
+0,10,45,47,2,3,-20.897822816343332,2.103109813476042,-18.79471300286729,"Ralph, Shaggy, Jimbo, Wemby, Westbrook","Mr. Crocker, Timmy, Chip, Link, Denzel"
+0,11,47,48,1,1,-4.906631714366665,-25.812262541419706,-30.71889425578637,"Ralph, Shaggy, Jimbo, Wemby, Westbrook","Carl, Jimmy, Sheen, Jimmy's mom, Mr. Crocker"
