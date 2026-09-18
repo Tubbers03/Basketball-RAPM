@@ -114,9 +114,166 @@ bart_rmse <- sqrt(
 cat("\nBART RMSE:\n")
 print(bart_rmse)
 
+# ============================================================
+# 7.5. BART VARIABLE USAGE
+# ============================================================
+
+cat("\n========================================\n")
+cat("BART VARIABLE USAGE\n")
+cat("========================================\n")
+
+
+# ------------------------------------------------------------
+# Calculate average number of times BART uses each variable
+# ------------------------------------------------------------
+
+var_counts <- colMeans(
+  bart_model$varcount
+)
+
+
+# ------------------------------------------------------------
+# Create variable usage table
+# ------------------------------------------------------------
+
+bart_variable_usage <- data.frame(
+  Player = colnames(bart_model$varcount),
+  Usage = var_counts
+)
+
+
+# ------------------------------------------------------------
+# Sort from most used to least used
+# ------------------------------------------------------------
+
+bart_variable_usage <- bart_variable_usage[
+  order(
+    bart_variable_usage$Usage,
+    decreasing = TRUE
+  ),
+]
+
+
+cat("\nTOP 30 VARIABLES USED BY BART\n")
+cat("----------------------------------------\n")
+
+print(
+  head(
+    bart_variable_usage,
+    30
+  ),
+  row.names = FALSE
+)
+
+
+# ============================================================
+# TRUE INTERACTION PAIRS
+# ============================================================
+
+interaction_pairs <- list(
+  c("Ashley.Wilson", "Brooklyn"),
+  c("Anna", "Hay.Hay"),
+  c("CalebB", "Julio.Rodriguez"),
+  c("Deni.Avdija", "Whooly"),
+  c("Handsome.Jack", "Rudy.Gobert"),
+  c("Ben.Rice", "Ben"),
+  c("Dailey", "Mystery.Girl"),
+  c("Darius.Garland", "Brook.Lopez"),
+  c("Ralph", "Buddy"),
+  c("Shaggy", "Bugs"),
+  c("Eli", "Mylee"),
+  c("Mario", "Yoshi"),
+  c("Jaxsyn", "Demar.Defrozen"),
+  c("Shohei.Ohtani", "Freddie.Freeman"),
+  c("Carl", "Jimmy"),
+  c("Sheen", "Cindy"),
+  c("Nate", "Narwhal"),
+  c("Defender", "Attacker"),
+  c("Toby", "Aric"),
+  c("Brooke", "Adalee")
+)
+
+
+# ------------------------------------------------------------
+# Get all players involved in interactions
+# ------------------------------------------------------------
+
+interaction_players <- unique(
+  unlist(interaction_pairs)
+)
+
+
+# ------------------------------------------------------------
+# Mark interaction players
+# ------------------------------------------------------------
+
+bart_variable_usage$True_Interaction_Player <-
+  bart_variable_usage$Player %in% interaction_players
+
+
+# ------------------------------------------------------------
+# Extract interaction players
+# ------------------------------------------------------------
+
+interaction_usage <- bart_variable_usage[
+  bart_variable_usage$True_Interaction_Player,
+]
+
+
+interaction_usage <- interaction_usage[
+  order(
+    interaction_usage$Usage,
+    decreasing = TRUE
+  ),
+]
+
+
+cat("\n========================================\n")
+cat("BART USAGE OF TRUE INTERACTION PLAYERS\n")
+cat("========================================\n")
+
+print(
+  interaction_usage,
+  row.names = FALSE
+)
+
+
+# ============================================================
+# AVERAGE USAGE COMPARISON
+# ============================================================
+
+interaction_mean_usage <- mean(
+  interaction_usage$Usage
+)
+
+
+noninteraction_mean_usage <- mean(
+  bart_variable_usage[
+    !bart_variable_usage$True_Interaction_Player,
+    "Usage"
+  ]
+)
+
+
+cat("\n========================================\n")
+cat("AVERAGE VARIABLE USAGE\n")
+cat("========================================\n")
+
+cat(
+  "True interaction players:",
+  interaction_mean_usage,
+  "\n"
+)
+
+cat(
+  "Other players:",
+  noninteraction_mean_usage,
+  "\n"
+)
+
 
 # ========================================
-# OLS
+# 8. OLS
 # ========================================
 
 cat("\n========================================\n")
@@ -148,19 +305,54 @@ cat("\n========================================\n")
 cat("RUNNING RIDGE\n")
 cat("========================================\n")
 
+# ------------------------------------------------------------
+# Use cross-validation to choose lambda
+# ------------------------------------------------------------
+
+set.seed(123)
+
+ridge_cv <- cv.glmnet(
+  X_train,
+  y_train,
+  alpha = 0,
+  intercept = FALSE,
+  nfolds = 10
+)
+
+# Lambda chosen by minimum cross-validation error
+best_lambda <- ridge_cv$lambda.min
+
+cat("\nBest lambda from cross-validation:\n")
+print(best_lambda)
+
+
+# ------------------------------------------------------------
+# Fit Ridge using the selected lambda
+# ------------------------------------------------------------
+
 ridge_model <- glmnet(
   X_train,
   y_train,
   alpha = 0,
-  intercept = FALSE
+  intercept = FALSE,
+  lambda = best_lambda
 )
 
-# Use lambda = 10
+
+# ------------------------------------------------------------
+# Make predictions on the test set
+# ------------------------------------------------------------
+
 ridge_predictions <- predict(
   ridge_model,
   newx = X_test,
-  s = 10
+  s = best_lambda
 )
+
+
+# ------------------------------------------------------------
+# Calculate test RMSE
+# ------------------------------------------------------------
 
 ridge_rmse <- sqrt(
   mean((y_test - ridge_predictions)^2)
@@ -168,6 +360,174 @@ ridge_rmse <- sqrt(
 
 cat("\nRidge RMSE:\n")
 print(ridge_rmse)
+
+
+# ============================================================
+# 9.5. TRUE ALPHA RECOVERY
+# ============================================================
+
+cat("\n========================================\n")
+cat("TRUE ALPHA RECOVERY\n")
+cat("========================================\n")
+
+
+# ------------------------------------------------------------
+# Load true alpha values
+# ------------------------------------------------------------
+
+true_alphas <- read.csv("true_alphas.csv")
+
+cat("\nTrue alpha rows:", nrow(true_alphas), "\n")
+cat("\nTrue alpha columns:\n")
+print(names(true_alphas))
+
+
+# ------------------------------------------------------------
+# Extract OLS coefficients
+# ------------------------------------------------------------
+
+ols_beta_vector <- as.vector(ols_beta)
+
+
+# ------------------------------------------------------------
+# Extract Ridge coefficients
+# ------------------------------------------------------------
+
+ridge_beta_vector <- as.vector(coef(ridge_model))
+
+# Remove intercept if glmnet included one
+if (length(ridge_beta_vector) == ncol(X_train) + 1) {
+  ridge_beta_vector <- ridge_beta_vector[-1]
+}
+
+
+# ------------------------------------------------------------
+# Create player effect table
+# ------------------------------------------------------------
+
+player_effects <- data.frame(
+  Player = colnames(X_train),
+  True_Alpha = true_alphas$True_Alpha,
+  OLS = ols_beta_vector,
+  Ridge = ridge_beta_vector
+)
+
+
+# ------------------------------------------------------------
+# Center all coefficients
+# ------------------------------------------------------------
+
+player_effects$True_Alpha_Centered <-
+  player_effects$True_Alpha -
+  mean(player_effects$True_Alpha)
+
+player_effects$OLS_Centered <-
+  player_effects$OLS -
+  mean(player_effects$OLS)
+
+player_effects$Ridge_Centered <-
+  player_effects$Ridge -
+  mean(player_effects$Ridge)
+
+
+# ------------------------------------------------------------
+# Calculate errors
+# ------------------------------------------------------------
+
+player_effects$OLS_Error <-
+  player_effects$OLS_Centered -
+  player_effects$True_Alpha_Centered
+
+player_effects$Ridge_Error <-
+  player_effects$Ridge_Centered -
+  player_effects$True_Alpha_Centered
+
+
+player_effects$OLS_Absolute_Error <-
+  abs(player_effects$OLS_Error)
+
+player_effects$Ridge_Absolute_Error <-
+  abs(player_effects$Ridge_Error)
+
+
+# ------------------------------------------------------------
+# Calculate coefficient RMSE
+# ------------------------------------------------------------
+
+ols_alpha_rmse <- sqrt(
+  mean(player_effects$OLS_Error^2)
+)
+
+ridge_alpha_rmse <- sqrt(
+  mean(player_effects$Ridge_Error^2)
+)
+
+
+# ------------------------------------------------------------
+# Print results
+# ------------------------------------------------------------
+
+cat("\n========================================\n")
+cat("PLAYER EFFECT RMSE\n")
+cat("========================================\n")
+
+cat(
+  "OLS alpha RMSE:",
+  ols_alpha_rmse,
+  "\n"
+)
+
+cat(
+  "Ridge alpha RMSE:",
+  ridge_alpha_rmse,
+  "\n"
+)
+
+
+# ------------------------------------------------------------
+# Compare alpha recovery
+# ------------------------------------------------------------
+
+cat("\n========================================\n")
+cat("ALPHA RECOVERY COMPARISON\n")
+cat("========================================\n")
+
+alpha_comparison <- data.frame(
+  Model = c(
+    "OLS",
+    "Ridge"
+  ),
+  
+  Alpha_RMSE = c(
+    ols_alpha_rmse,
+    ridge_alpha_rmse
+  )
+)
+
+print(alpha_comparison)
+
+
+# ------------------------------------------------------------
+# Show individual player estimates
+# ------------------------------------------------------------
+
+cat("\n========================================\n")
+cat("PLAYER EFFECT ESTIMATES\n")
+cat("========================================\n")
+
+print(
+  player_effects[
+    c(
+      "Player",
+      "True_Alpha",
+      "OLS",
+      "Ridge",
+      "OLS_Error",
+      "Ridge_Error"
+    )
+  ],
+  row.names = FALSE
+)
 
 
 # ============================================================
