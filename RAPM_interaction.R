@@ -274,6 +274,14 @@ ridge_rmse <- sqrt(
 cat("\nBest Ridge lambda:", ridge_model$lambda.min, "\n")
 cat("Ridge Test RMSE:", ridge_rmse, "\n")
 
+# ============================================================
+# SAVE INTERACTION RESULTS
+# ============================================================
+
+interaction_ols_rmse <- ols_rmse
+interaction_ridge_rmse <- ridge_rmse
+interaction_bart_rmse <- bart_rmse
+
 # ------------------------------------------------------------
 # LOAD TRUE ALPHAS
 # ------------------------------------------------------------
@@ -427,6 +435,69 @@ write.csv(
 write.csv(
   bart_usage_df,
   "interaction_bart_variable_usage.csv",
+  row.names = FALSE
+)
+
+# ============================================================
+# SAVE BASELINE RMSE RESULTS
+# ============================================================
+
+baseline_ols_rmse <- ols_rmse
+baseline_ridge_rmse <- ridge_rmse
+baseline_bart_rmse <- bart_rmse
+
+cat("\n========================================\n")
+cat("BASELINE RMSE RESULTS\n")
+cat("========================================\n")
+
+cat("Baseline OLS:", baseline_ols_rmse, "\n")
+cat("Baseline Ridge:", baseline_ridge_rmse, "\n")
+cat("Baseline BART:", baseline_bart_rmse, "\n")
+
+# ============================================================
+# BASELINE VS INTERACTION COMPARISON
+# ============================================================
+
+comparison_results <- data.frame(
+  Model = c(
+    "OLS",
+    "Ridge",
+    "BART"
+  ),
+
+  Baseline_RMSE = c(
+    baseline_ols_rmse,
+    baseline_ridge_rmse,
+    baseline_bart_rmse
+  ),
+
+  Interaction_RMSE = c(
+    interaction_ols_rmse,
+    interaction_ridge_rmse,
+    interaction_bart_rmse
+  )
+)
+
+# Calculate how much RMSE changed
+comparison_results$RMSE_Change <-
+  comparison_results$Interaction_RMSE -
+  comparison_results$Baseline_RMSE
+
+# Calculate percent change
+comparison_results$Percent_Change <-
+  (
+    comparison_results$Interaction_RMSE -
+    comparison_results$Baseline_RMSE
+  ) /
+  comparison_results$Baseline_RMSE * 100
+
+
+cat("\n========================================\n")
+cat("BASELINE VS INTERACTION\n")
+cat("========================================\n")
+
+print(
+  comparison_results,
   row.names = FALSE
 )
 
